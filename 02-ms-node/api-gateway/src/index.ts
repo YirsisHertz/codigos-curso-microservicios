@@ -1,44 +1,33 @@
-import express, { Request, Response } from "express";
-import cors from "cors";
+import { ApolloServer } from "@apollo/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
+
 import dotenv from "dotenv";
-import axios from "axios";
+
+import { typeDefs } from "./typeDefs";
+import { resolvers } from "./resolvers";
+
+import { EventBrokerAPI } from "./datasources/eventBroker.datasource";
 
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT;
-
-app.use(cors());
-
-app.use(express.json());
-
-app.post("/api/v1/", async (req: Request, res: Response) => {
-  const { event, data: requestData } = req.body;
-
-  if (!event) {
-    return res.status(400).json({
-      message: "Event is required",
-    });
-  }
-
-  try {
-    const { data } = await axios.post("http://localhost:3001/events", {
-      event: event.toUpperCase(),
-      data: requestData,
-    });
-
-    return res.status(200).json({
-      message: "Success",
-      data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Error",
-      error,
-    });
-  }
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
 });
 
-app.listen(port, () => {
-  console.log("API GATEWAY is running on port:", port);
+const { url } = await startStandaloneServer(server, {
+  listen: {
+    port: parseInt(process.env.PORT),
+  },
+  context: async () => {
+    const { cache } = server;
+
+    return {
+      dataSources: {
+        eventBrokerAPI: new EventBrokerAPI({ cache }),
+      },
+    };
+  },
 });
+
+console.log(`GraphQL API Gateway started: ${url}`);

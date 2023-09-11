@@ -13,7 +13,7 @@ export const eventBrokerController = async (req: Request, res: Response) => {
     const products = await getAllProducts();
 
     return res.status(200).json({
-      products,
+      data: products,
     });
   }
 
@@ -21,7 +21,7 @@ export const eventBrokerController = async (req: Request, res: Response) => {
     const users = await getAllUsers();
 
     return res.status(200).json({
-      users,
+      data: users,
     });
   }
 
@@ -29,7 +29,7 @@ export const eventBrokerController = async (req: Request, res: Response) => {
     const sale = await createSale(data);
 
     return res.status(200).json({
-      sale,
+      data: sale,
     });
   }
 
